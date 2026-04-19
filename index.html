@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Control de Asistencia</title>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+
+body {
+  font-family: Arial;
+  margin: 0;
+  background: #f1f5f9;
+  transition: 0.3s;
+}
+
+/* HEADER MEJORADO */
+.header {
+  background: linear-gradient(90deg, #1e3a8a, #1d4ed8);
+  color: white;
+  text-align: center;
+  padding: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.logo {
+  width: 60px;
+  display: block;
+  margin: 0 auto 5px;
+  opacity: 0.95;
+}
+
+.nombre-liceo {
+  font-size: 17px;
+  font-weight: bold;
+}
+
+.sistema {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+/* BOTONES PRO */
+.botones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 12px;
+}
+
+.botones button {
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  background: #e2e8f0;
+  font-weight: bold;
+  font-size: 14px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.activo {
+  background: #1e3a8a;
+  color: white;
+}
+
+/* CAMARA MÁS LIMPIA */
+#reader {
+  width: 100%;
+  max-width: 380px;
+  margin: 10px auto;
+  border-radius: 15px;
+  overflow: hidden;
+  border: 3px solid #1e3a8a;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+  background: black;
+}
+
+/* MENSAJE MÁS PRO */
+#mensaje {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin-top: 10px;
+  padding: 10px;
+}
+
+/* EFECTOS */
+.verde {
+  background: #16a34a !important;
+  color: white;
+}
+
+.rojo {
+  background: #dc2626 !important;
+  color: white;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+<img src="./logo.png.png" class="logo">
+<div class="nombre-liceo">Liceo Luis Urbina Flores</div>
+<div class="sistema">Sistema de Control de Asistencia</div>
+</div>
+
+<div class="botones">
+<button onclick="setModo('entrada')" id="btnEntrada" class="activo">Entrada</button>
+<button onclick="setModo('atraso')" id="btnAtraso">Atraso</button>
+<button onclick="setModo('almuerzo')" id="btnAlmuerzo">Almuerzo</button>
+<button onclick="setModo('convivencia')" id="btnConvivencia">Convivencia Escolar</button>
+<button onclick="setModo('inspectoria')" id="btnInspectoria">Inspectoría General</button>
+</div>
+
+<div id="reader"></div>
+
+<div id="mensaje">Esperando escaneo...</div>
+
+<script>
+
+let modo = "entrada";
+let bloqueado = false;
+
+// CAMBIAR MODO
+function setModo(nuevo){
+  modo = nuevo;
+  document.querySelectorAll("button").forEach(b=>b.classList.remove("activo"));
+  document.getElementById("btn"+capitalize(nuevo)).classList.add("activo");
+}
+
+function capitalize(t){
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+// GOOGLE
+const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzJEOFmMunYmdTMyjCvlrlBgAv8tKlFnQFOa63B0j-wdHlIZR9zzWWk6Be2ypWMRrIO/exec";
+
+// ESCANEO
+function onScanSuccess(texto){
+
+ if(bloqueado) return;
+ bloqueado = true;
+
+ let mensaje = document.getElementById("mensaje");
+ let datos = texto.split("|");
+
+ document.body.classList.add("verde");
+
+ if(datos.length >= 5){
+
+   let nombre = datos[0];
+   let apellido1 = datos[1];
+   let curso = datos[3];
+   let rut = datos[4];
+
+   mensaje.innerText =
+     "✔ REGISTRADO\n" +
+     nombre + " " + apellido1 + "\n" +
+     curso;
+
+   fetch(URL_SCRIPT,{
+     method:"POST",
+     mode:"no-cors",
+     body: JSON.stringify({
+       rut: rut,
+       tipo: modo,
+       hora: new Date().toLocaleTimeString(),
+       fecha: new Date().toLocaleDateString()
+     })
+   });
+
+ } else {
+
+   mensaje.innerText = "✔ REGISTRADO\n" + texto;
+
+   fetch(URL_SCRIPT,{
+     method:"POST",
+     mode:"no-cors",
+     body: JSON.stringify({
+       rut: texto,
+       tipo: modo,
+       hora: new Date().toLocaleTimeString(),
+       fecha: new Date().toLocaleDateString()
+     })
+   });
+
+ }
+
+ setTimeout(()=>{
+   bloqueado = false;
+   mensaje.innerText = "Esperando escaneo...";
+   document.body.classList.remove("verde");
+ },2000);
+
+}
+
+// CAMARA
+const qr = new Html5Qrcode("reader");
+
+qr.start(
+  {facingMode:"environment"},
+  {fps:6,qrbox:250},
+  onScanSuccess
+);
+
+</script>
+
+</body>
+</html>
