@@ -103,6 +103,11 @@ body {
 
 <body>
 
+<!-- 🔊 AUDIO INTEGRADO -->
+<audio id="beepSound">
+  <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=" type="audio/wav">
+</audio>
+
 <div class="header">
 <img src="./logo.png.png" class="logo">
 <div class="nombre-liceo">Liceo Luis Urbina Flores</div>
@@ -126,32 +131,14 @@ body {
 let modo = "entrada";
 let bloqueado = false;
 
-// 🔊 AUDIO PARA CELULAR
-let audioCtx;
-
-document.addEventListener("click", () => {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-});
-
+// 🔊 SONIDO
 function beep() {
-  if (!audioCtx) return;
-
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-
-  osc.frequency.value = 900;
-  gain.gain.value = 0.2;
-
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-
-  osc.start();
-  setTimeout(()=>osc.stop(),150);
+  const audio = document.getElementById("beepSound");
+  audio.currentTime = 0;
+  audio.play().catch(()=>{});
 }
 
-// CAMBIAR MODO
+// 🔁 CAMBIAR MODO
 function setModo(nuevo){
   modo = nuevo;
   document.querySelectorAll("button").forEach(b=>b.classList.remove("activo"));
@@ -162,16 +149,21 @@ function capitalize(t){
   return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
-// GOOGLE
+// 🔗 GOOGLE
 const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzJEOFmMunYmdTMyjCvlrlBgAv8tKlFnQFOa63B0j-wdHlIZR9zzWWk6Be2ypWMRrIO/exec";
 
-// ESCANEO
+// 📲 ESCANEO
 function onScanSuccess(texto){
 
  if(bloqueado) return;
  bloqueado = true;
 
  beep(); // 🔊 SONIDO
+
+ // 📳 VIBRACIÓN (CELULAR)
+ if (navigator.vibrate) {
+   navigator.vibrate(200);
+ }
 
  let mensaje = document.getElementById("mensaje");
  let datos = texto.split("|");
@@ -226,7 +218,7 @@ function onScanSuccess(texto){
 
 }
 
-// CAMARA
+// 📷 CAMARA
 const qr = new Html5Qrcode("reader");
 
 qr.start(
