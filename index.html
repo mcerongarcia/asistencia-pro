@@ -102,6 +102,7 @@ body {
 <button onclick="setModo('almuerzo')" id="btnAlmuerzo">Almuerzo</button>
 <button onclick="setModo('convivencia')" id="btnConvivencia">Convivencia Escolar</button>
 <button onclick="setModo('inspectoria')" id="btnInspectoria">Inspectoría General</button>
+<button onclick="setModo('enfermeria')" id="btnEnfermeria">Enfermería</button>
 </div>
 
 <div id="reader"></div>
@@ -141,6 +142,7 @@ function beep(freq = 800, duration = 150, volume = 0.3){
 let modo = "entrada";
 let bloqueado = false;
 let ultimoQR = "";
+let tiempoQR = 0;
 
 // CAMBIAR MODO
 function setModo(nuevo){
@@ -159,9 +161,14 @@ const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbyqe2E3NWr6apTEFWGOc
 // 📲 ESCANEO (NO TOCADO)
 function onScanSuccess(texto){
 
-if(texto === ultimoQR) return;
+let ahora = Date.now();
+
+if(texto === ultimoQR && (ahora - tiempoQR < 5000)){
+  return;
+}
 
 ultimoQR = texto;
+tiempoQR = ahora;
 
 if(bloqueado) return;
 bloqueado = true;
@@ -201,20 +208,11 @@ fetch(URL_SCRIPT,{
 
 setTimeout(()=>{
   bloqueado = false;
-  ultimoQR = "";
-
-  document.body.classList.remove("verde","rojo");
-  document.body.style.background = "#f1f5f9";
-
   mensaje.innerText = "Esperando escaneo...";
+  document.body.classList.remove("verde","rojo");
 },2000);
 
 }
-
-// 🔄 LIMPIA QR
-setInterval(()=>{
-  ultimoQR = "";
-}, 2500);
 
 // 📷 CAMARA (SOLO MEJORA VELOCIDAD)
 const qr = new Html5Qrcode("reader");
@@ -222,7 +220,7 @@ const qr = new Html5Qrcode("reader");
 qr.start(
   {facingMode:"environment"},
   {
-    fps:8, // 🔥 MÁS RÁPIDO EN CELULAR
+    fps:12, // 🔥 MÁS RÁPIDO EN CELULAR
     qrbox:250
   },
   onScanSuccess
