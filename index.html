@@ -201,8 +201,12 @@ fetch(URL_SCRIPT,{
 
 setTimeout(()=>{
   bloqueado = false;
-  mensaje.innerText = "Esperando escaneo...";
+  ultimoQR = "";
+
   document.body.classList.remove("verde","rojo");
+  document.body.style.background = "#f1f5f9";
+
+  mensaje.innerText = "Esperando escaneo...";
 },2000);
 
 }
